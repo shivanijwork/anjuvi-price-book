@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { requireLogin } from "./_lib/auth.js";
+import { isValidPathname } from "./_lib/blob.js";
 
 const sql = neon(process.env.DATABASE_URL);
 
@@ -17,7 +18,8 @@ function cleanPhoto(url) {
   if (url == null || url === "") return null;
   const s = String(url);
   // Only our own photos folder or Vercel Blob URLs are allowed.
-  if (s.startsWith("/photos/") || /^https:\/\/[a-z0-9-]+\.public\.blob\.vercel-storage\.com\//i.test(s)) return s;
+  if (/^\/photos\/[a-f0-9]+\.jpg$/.test(s)) return s;
+  if (s.startsWith("/api/photo?p=") && isValidPathname(decodeURIComponent(s.slice(13)))) return s;
   throw new Error("bad_photo");
 }
 
