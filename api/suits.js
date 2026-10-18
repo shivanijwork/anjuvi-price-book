@@ -78,7 +78,10 @@ export default async function handler(req, res) {
     if (["missing", "bad_number", "bad_photo"].includes(e.message)) {
       return res.status(400).json({ error: e.message });
     }
-    console.error(e);
-    return res.status(500).json({ error: "server_error" });
+    console.error("suits failed:", e);
+    return res.status(500).json({
+      error: process.env.DATABASE_URL ? "db_error" : "db_not_configured",
+      detail: String(e && e.message || e).slice(0, 300),
+    });
   }
 }

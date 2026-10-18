@@ -152,7 +152,7 @@ async function api(path,opts={}){
   const r=await fetch(path,{credentials:"same-origin",headers:{"Content-Type":"application/json"},...opts,body:opts.body?JSON.stringify(opts.body):undefined});
   if(r.status===401){showLogin();throw {code:"login"}}
   const j=await r.json().catch(()=>({}));
-  if(!r.ok)throw {code:j.error||"error"};
+  if(!r.ok)throw {code:j.error||("http_"+r.status),detail:j.detail||"",step:path.split("?")[0]};
   return j;
 }
 
@@ -307,7 +307,12 @@ function openForm(s){
       replaceSuit(j.suit);close();toast(isNew?"Naya suit jud gaya":"Badlav save ho gaya");
     }catch(x){
       if(x.code==="login"){close();return}
-      err.textContent=x.code==="too_large"?"Photo bahut badi hai, chhoti photo chuno.":"Save nahi hua. Internet check karke dobara try karo.";
+      const why=x.code==="too_large"?"Photo bahut badi hai, chhoti photo chuno."
+        :x.code==="blob_not_connected"?"Photo storage (Vercel Blob) juda nahi hai."
+        :x.step==="/api/upload"?"Photo upload nahi hui."
+        :x.step==="/api/suits"?"Suit database mein save nahi hua."
+        :"Save nahi hua. Internet check karke dobara try karo.";
+      err.textContent=why+" ["+(x.code||x.name||"error")+(x.detail||x.message?": "+(x.detail||x.message):"")+"]";
       err.hidden=false;btn.disabled=false;btn.textContent="Save karo";
     }
   });
